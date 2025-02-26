@@ -1,17 +1,17 @@
 <?php
 session_start();
-require_once __DIR__ . '/../database/funciones.php'; // Asegúrate de que este archivo existe y está correctamente configurado
+require_once __DIR__ . '/../database/funciones.php'; // Archivo con las funciones necesarias
 
-// Verificar si hay sesión y obtener el id del usuario
+// Verificar si hay sesión activa
 if (!isset($_SESSION['user_id'])) {
     echo "No tienes permisos para editar este pasajero.";
     exit();
 }
 
-// Recuperar el id del usuario desde la sesión
+// Obtener el ID del pasajero desde GET
 $user_id = isset($_GET['id']) ? $_GET['id'] : null;
 
-// Obtener los datos del pasajero desde la base de datos
+// Obtener datos del pasajero
 $pasajero = obtenerDatosPasajeroId($user_id);
 
 // Verificar si el pasajero existe
@@ -20,30 +20,29 @@ if ($pasajero === null) {
     exit();
 }
 
-// Definir las variables
-$nombre = $apellidos = $edad = $asistencia = "";
+// Obtener la lista de aviones disponibles
+$aviones = obtenerAviones();
 
 // Si se envió el formulario
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    // Recoger los datos del formulario
     $id = $_POST['id'];
     $nombre = $_POST['nombre'];
     $apellidos = $_POST['apellidos'];
     $edad = $_POST['edad'];
-    $asistencia = isset($_POST['asistencia']) ? 1 : 0; // Si 'asistencia' está marcado, se pone 1, sino 0
+    $asistencia = isset($_POST['asistencia']) ? 1 : 0;
+    $avion_id = $_POST['avion_id']; // Nuevo campo para el avión seleccionado
 
     // Actualizar el pasajero en la base de datos
-    actualizarPasajero($id, $nombre, $apellidos, $edad, $asistencia);
+    actualizarPasajero($id, $nombre, $apellidos, $edad, $asistencia, $avion_id);
 
     // Redirigir al índice
     header('Location: /index.php');
     exit();
 }
-
 ?>
 
 <!DOCTYPE html>
-<html lang="en">
+<html lang="es">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -55,22 +54,22 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <form action="" method="POST">
         <div>
             <label for="id">ID</label>
-            <input type="text" id="id" name="id" value="<?= ($pasajero->getId()) ?>" readonly>
+            <input type="text" id="id" name="id" value="<?= $pasajero->getId() ?>" readonly>
         </div>
 
         <div>
             <label for="nombre">Nombre</label>
-            <input type="text" id="nombre" name="nombre" value="<?= ($pasajero->getNombre()) ?>">
+            <input type="text" id="nombre" name="nombre" value="<?= $pasajero->getNombre() ?>">
         </div>
 
         <div>
             <label for="apellidos">Apellidos</label>
-            <input type="text" id="apellidos" name="apellidos" value="<?= ($pasajero->getApellidos()) ?>">
+            <input type="text" id="apellidos" name="apellidos" value="<?= $pasajero->getApellidos() ?>">
         </div>
 
         <div>
             <label for="edad">Edad</label>
-            <input type="number" id="edad" name="edad" value="<?= ($pasajero->getEdad()) ?>">
+            <input type="number" id="edad" name="edad" value="<?= $pasajero->getEdad() ?>">
         </div>
 
         <div>
@@ -78,7 +77,21 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             <input type="checkbox" id="asistencia" name="asistencia" <?= $pasajero->getAsistencia() ? 'checked' : ''; ?>>
         </div>
 
-        <button type="submit">Editar</button>
+        <div>
+            <label for="avion_id">Avión</label>
+            <select id="avion_id" name="avion_id">
+                <option value="">Selecciona un avión</option>
+                
+                <?php foreach ($aviones as $avion): ?>
+                    
+                    <option value="<?= $avion['id'] ?>" <?= ($pasajero->getAvionId() == $avion['id']) ? 'selected' : '' ?>>
+                        <?= $avion['marca'] . " " . $avion['modelo'] ?>
+                    </option>
+                <?php endforeach; ?>
+            </select>
+        </div>
+
+        <button type="submit">Guardar cambios</button>
     </form>
 </body>
 </html>

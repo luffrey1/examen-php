@@ -1,7 +1,7 @@
 <?php
 session_start();
 
-require_once __DIR__ . '/database/funciones.php';
+require_once $_SERVER['DOCUMENT_ROOT'] . '/examen/database/funciones.php';
 
 if (!isset($_SESSION['user_id'])) {
     header("Location: /examen/formularios/pasajero.php");

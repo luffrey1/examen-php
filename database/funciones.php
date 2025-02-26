@@ -1,6 +1,6 @@
 <?php
-require_once $_SERVER['DOCUMENT_ROOT'] . '/model/Avion.php';
-require_once $_SERVER['DOCUMENT_ROOT'] . '/model/Pasajero.php';
+require_once $_SERVER['DOCUMENT_ROOT'] . '/examen/model/Avion.php';
+require_once $_SERVER['DOCUMENT_ROOT'] . '/examen/model/Pasajero.php';
 function conectar() {
     $server = "127.0.0.1"; // localhost
     $user = "root";
@@ -21,7 +21,7 @@ function crearTablaAvion() {
 }
 function crearTablaPasajero() {
     $conexion = conectar();
-    $sql = "CREATE TABLE Pasajero (
+    $sql = "CREATE TABLE if not exists Pasajero (
     id VARCHAR(50) PRIMARY KEY,
     nombre VARCHAR(50) NOT NULL,
     apellidos VARCHAR(100) NOT NULL,
@@ -78,19 +78,21 @@ function insertarUsuario($pasajero) {
     $apellidos = $pasajero->getApellidos();
     $edad = $pasajero->getEdad();
     $asistencia = $pasajero->getAsistencia();
+    $avion_id = $pasajero->getAvionId(); // Agregar avion_id al objeto
     
     // Hashear la contraseña
     $pass = password_hash($pasajero->getContrasena(), PASSWORD_DEFAULT);
 
     // Vincular parámetros al query
     $prepared->bind_param(
-        "issibs", 
+        "issibsi", 
         $id,
         $nombre,
         $apellidos,
         $edad,
         $asistencia,
-        $pass
+        $pass,
+        $avion_id
     );
     
     // Ejecutar la consulta
@@ -185,7 +187,7 @@ function obtenerDatosPasajeroId($id) {
     $conexion = conectar();
 
     // Consulta SQL para obtener los datos del pasajero
-    $sql = "SELECT id, nombre, apellidos, edad, asistencia FROM Pasajero WHERE id = ?";
+    $sql = "SELECT id, nombre, apellidos, edad, asistencia, avion_id FROM Pasajero WHERE id = ?";
 
     // Preparar la consulta
     $prepared = $conexion->prepare($sql);
@@ -213,24 +215,25 @@ function obtenerDatosPasajeroId($id) {
             $data['apellidos'], 
             (int)$data['edad'], 
             (bool)$data['asistencia'],
-            ''
+            '', // aqui va la contraseña
+            (int)$data['avion_id']
         );
     }
     
     // Si no se encontró el pasajero, devolver null
     return null; 
 }
-function actualizarPasajero($id, $nombre, $apellidos, $edad, $asistencia) {
+function actualizarPasajero($id, $nombre, $apellidos, $edad, $asistencia, $avion_id) {
     $conexion = conectar();
 
 
     $sql = "UPDATE Pasajero 
-            SET nombre = ?, apellidos = ?, edad = ?, asistencia = ? 
+            SET nombre = ?, apellidos = ?, edad = ?, asistencia = ?, avion_id = ?  
             WHERE id = ?";
 
     $stmt = $conexion->prepare($sql);
 
-    $stmt->bind_param("ssdis", $nombre, $apellidos, $edad, $asistencia, $id);
+    $stmt->bind_param("ssdiis", $nombre, $apellidos, $edad, $asistencia, $avion_id, $id);
     $resultado = $stmt->execute();
     if ($resultado) {
         echo "Los datos del pasajero han sido actualizados correctamente.";
