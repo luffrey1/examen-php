@@ -26,7 +26,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     }
 
     if (!empty($_POST["contra1"])) {
-        $contra1 = ($_POST["contra1"]);
+        $contra1 = ($_POST["contra1"]); 
     } else {
         $contra1Err = "Tienes que introducir de nuevo la contraseña";
         $errores = true;
@@ -86,7 +86,6 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     }
 }
 ?>
-
 <!DOCTYPE html>
 <html lang="en">
 <head>

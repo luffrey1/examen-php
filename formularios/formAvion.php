@@ -1,7 +1,7 @@
 <?php
-require_once $_SERVER['DOCUMENT_ROOT'] . '/examen/database/funciones.php';
-crearTablaAvion();
-crearTablaPasajero();
+require_once $_SERVER['DOCUMENT_ROOT'] . '/database/funciones.php';
+// crearTablaAvion();
+// crearTablaPasajero();
 $marca = $modelo = $maximoPasajeros = "";
 $marcaErr = $modeloErr = $maximoPasajerosErr ="";
 $errores = false;

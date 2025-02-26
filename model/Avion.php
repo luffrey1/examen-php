@@ -31,7 +31,4 @@
 	public function setMaximoPasajeros(int $maximoPasajeros): void {$this->maximoPasajeros = $maximoPasajeros;}
 
 	public function setPasajeros(array $pasajeros): void {$this->pasajeros = $pasajeros;}
-
-	
-	
 }

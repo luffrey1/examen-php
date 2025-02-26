@@ -12,7 +12,7 @@ if (!isset($_SESSION['user_id'])) {
 $user_id = isset($_GET['id']) ? $_GET['id'] : null;
 
 // Obtener los datos del pasajero desde la base de datos
-$pasajero = obtenerDatosPasajero($user_id);
+$pasajero = obtenerDatosPasajeroId($user_id);
 
 // Verificar si el pasajero existe
 if ($pasajero === null) {
@@ -55,22 +55,22 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <form action="" method="POST">
         <div>
             <label for="id">ID</label>
-            <input type="text" id="id" name="id" value="<?= htmlspecialchars($pasajero->getId()) ?>" readonly>
+            <input type="text" id="id" name="id" value="<?= ($pasajero->getId()) ?>" readonly>
         </div>
 
         <div>
             <label for="nombre">Nombre</label>
-            <input type="text" id="nombre" name="nombre" value="<?= htmlspecialchars($pasajero->getNombre()) ?>">
+            <input type="text" id="nombre" name="nombre" value="<?= ($pasajero->getNombre()) ?>">
         </div>
 
         <div>
             <label for="apellidos">Apellidos</label>
-            <input type="text" id="apellidos" name="apellidos" value="<?= htmlspecialchars($pasajero->getApellidos()) ?>">
+            <input type="text" id="apellidos" name="apellidos" value="<?= ($pasajero->getApellidos()) ?>">
         </div>
 
         <div>
             <label for="edad">Edad</label>
-            <input type="number" id="edad" name="edad" value="<?= htmlspecialchars($pasajero->getEdad()) ?>">
+            <input type="number" id="edad" name="edad" value="<?= ($pasajero->getEdad()) ?>">
         </div>
 
         <div>

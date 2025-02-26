@@ -1,6 +1,6 @@
 <?php
-require_once $_SERVER['DOCUMENT_ROOT'] . '/examen/model/Avion.php';
-require_once $_SERVER['DOCUMENT_ROOT'] . '/examen/model/Pasajero.php';
+require_once $_SERVER['DOCUMENT_ROOT'] . '/model/Avion.php';
+require_once $_SERVER['DOCUMENT_ROOT'] . '/model/Pasajero.php';
 function conectar() {
     $server = "127.0.0.1"; // localhost
     $user = "root";
@@ -128,51 +128,59 @@ function verificarId($id):bool {
     }
     return null; // Return null if tipo is not 'c' or 'm'
 }
-function mostrarPasajeros() {
-    $conexion = conectar();
-    
-    // Consulta SQL para obtener los pasajeros
-    $sql = "SELECT id, nombre, apellidos, edad, asistencia FROM Pasajero"; 
-    
-    // Preparar la consulta
+function eliminarPasajero($id) {
+    $conexion = conectar(); // Conectar a la base de datos
+
+    $sql = "DELETE FROM Pasajero WHERE id = ?";
     $stmt = $conexion->prepare($sql);
-    
-    // Ejecutar la consulta
-    $stmt->execute();
-    
-    // Obtener los resultados
-    $resultado = $stmt->get_result();
-    
-    // Comprobar si hay resultados
-    if ($resultado->num_rows > 0) {
-        // Mostrar los resultados
-        while ($pasajero = $resultado->fetch_assoc()) {
-            echo "<div class='card mb-3'>";
-            echo "  <div class='card-body'>";
-            echo "      <h5 class='card-title'>ID: " . $pasajero['id'] . "</h5>";
-            echo "      <p class='card-text'><strong>Nombre:</strong> " . $pasajero['nombre'] . " " . $pasajero['apellidos'] . "</p>";
-            echo "      <p class='card-text'><strong>Edad:</strong> " . $pasajero['edad'] . "</p>";
-            echo "      <p class='card-text'><strong>Asistencia:</strong> " . ($pasajero['asistencia'] ? "Sí" : "No") . "</p>";
-            echo "      <div class='d-flex justify-content-between'>";
-            echo "          <a href='ajustes/editar.php?id=" . $pasajero['id'] . "' class='btn btn-primary' style='width:100px;'>Editar</a>";
-            echo "          <form action='ajustes/eliminar.php' method='POST' onsubmit='return confirm(\"¿Seguro que deseas eliminar este pasajero?\")'>";
-            echo "              <input type='hidden' name='id' value='" . $pasajero['id'] . "'>";
-            echo "              <button type='submit' class='btn btn-danger' style='width:100px;'>Eliminar</button>";
-            echo "          </form>";
-            echo "      </div>";
-            echo "      </div>";
-            echo "  </div>";
-            echo "</div>";
-        }
+    $stmt->bind_param('s', $id);
+
+    if ($stmt->execute()) {
+        $stmt->close();
+        $conexion->close();
+        return true; // Eliminación exitosa
     } else {
-        echo "<div class='alert alert-warning' role='alert'>No hay pasajeros disponibles.</div>";
+        $stmt->close();
+        $conexion->close();
+        return false; // Error al eliminar
     }
-    
-    // Cerrar la conexión
-    $stmt->close();
-    $conexion->close();
 }
-function obtenerDatosPasajero($id) {
+function obtenerDatosPasajero() {
+    // Conexión a la base de datos
+    $conexion = conectar();
+
+    // Consulta SQL para obtener todos los datos de los pasajeros
+    $sql = "SELECT id, nombre, apellidos, edad, asistencia FROM Pasajero";
+
+    // Preparar la consulta
+    $prepared = $conexion->prepare($sql);
+
+    // Ejecutar la consulta
+    $prepared->execute();
+
+    // Obtener el resultado
+    $result = $prepared->get_result();
+
+    $pasajeros = []; // Array para almacenar los pasajeros
+
+    // Recuperar todos los datos de los pasajeros
+    while ($data = $result->fetch_assoc()) {
+        // Crear un objeto Pasajero por cada fila obtenida
+        $pasajeros[] = new Pasajero(
+            $data['id'], 
+            $data['nombre'], 
+            $data['apellidos'], 
+            (int)$data['edad'], 
+            (bool)$data['asistencia'],
+            ''
+        );
+    }
+
+    // Devolver el array de pasajeros (puede estar vacío si no hay registros)
+    return $pasajeros; 
+}
+
+function obtenerDatosPasajeroId($id) {
     // Conexión a la base de datos
     $conexion = conectar();
 
@@ -232,50 +240,31 @@ function actualizarPasajero($id, $nombre, $apellidos, $edad, $asistencia) {
     $stmt->close();
     $conexion->close();
 }
-function verificarContraseña($id, $contrasenaIngresada) {
-    // Establecer la conexión a la base de datos
+function verificarUsuario( $id, $contra) {
+
+
     $conexion = conectar();
 
-    // Preparamos la consulta SQL para obtener la contraseña del pasajero por su ID
+
     $sql = "SELECT contrasena FROM Pasajero WHERE id = ?";
+    $prepared = $conexion->prepare($sql);
+    $prepared->bind_param("s", $id);
+    $prepared->execute();
+   
+    $result = $prepared->get_result();
 
-    // Preparamos la consulta
-    $stmt = $conexion->prepare($sql);
 
-    if ($stmt === false) {
-        die("Error al preparar la consulta: " . $conexion->error);
+    if ($result->num_rows > 0) {
+        $fila = $result->fetch_assoc();
+        $hash = $fila["contrasena"];
+        return password_verify($contra, $hash);
     }
 
-    // Vinculamos el parámetro con el ID
-    $stmt->bind_param("s", $id);
 
-    // Ejecutamos la consulta
-    $stmt->execute();
+    return false;
 
-    // Obtenemos el resultado
-    $stmt->bind_result($contrasenaHash);
-
-    // Si no se encuentra el pasajero
-    if (!$stmt->fetch()) {
-        echo "Pasajero no encontrado.";
-        $stmt->close();
-        $conexion->close();
-        return false;
-    }
-
-    // Verificamos la contraseña ingresada con la almacenada (usando password_verify)
-    if (password_verify($contrasenaIngresada, $contrasenaHash)) {
-        echo "Contraseña correcta.";
-        $stmt->close();
-        $conexion->close();
-        return true;
-    } else {
-        echo "Contraseña incorrecta.";
-        $stmt->close();
-        $conexion->close();
-        return false;
-    }
 }
+
 
 
 
